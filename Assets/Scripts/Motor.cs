@@ -14,9 +14,9 @@ public class Motor : MonoBehaviour
 
     public VirtualJoystick MoveJoystick;
 
-    public float BoostSpeed = 5.0f;
+    public float BoostSpeed = 20.0f;
 
-    public float BoostCooldown = 10.0f;
+    public float BoostCooldown = 2.0f;
 
     #endregion
 
@@ -67,6 +67,7 @@ public class Motor : MonoBehaviour
     {
         if(Time.time - mLastBoost > BoostCooldown)
         {
+            mLastBoost = Time.time;
             Controller.AddForce(Controller.velocity.normalized * BoostSpeed, ForceMode.VelocityChange);
         }
 

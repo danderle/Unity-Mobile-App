@@ -2,8 +2,50 @@ using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 
+public class LevelData
+{
+    /// <summary>
+    /// Default constructor
+    /// </summary>
+    /// <param name="levelName"></param>
+    public LevelData(string levelName)
+    {
+        string data = PlayerPrefs.GetString(levelName);
+        
+        if (data == string.Empty)
+            return;
+        
+        string[] allData = data.Split('&');
+        BestTime = float.Parse(allData[0]);
+        SilverTrime = float.Parse(allData[1]);
+        GoldTime = float.Parse(allData[2]);
+    }
+
+    public float BestTime { get; set; }
+    public float GoldTime { get; set; }
+    public float SilverTrime { get; set; }
+}
+
 public class MainMenu : MonoBehaviour
 {
+    #region Private Variables
+
+    /// <summary>
+    /// The camera transform.
+    /// </summary>
+    private Transform mCameraTransform;
+
+    /// <summary>
+    /// The camera desired look at.
+    /// </summary>
+    private Transform mCameraDesiredLookAt;
+
+    private int[] costs = { 0, 150, 150, 150, 300, 300, 300, 500, 500, 500, 2000, 2000, 2000, 2000, 2000, 2000};
+
+    private bool mNextLevelLocked = false;
+
+    #endregion
+
     #region Public variables
 
     /// <summary>
@@ -38,26 +80,15 @@ public class MainMenu : MonoBehaviour
 
     #endregion
 
-    #region Private Variables
-
-    /// <summary>
-    /// The camera transform.
-    /// </summary>
-    private Transform mCameraTransform;
-
-    /// <summary>
-    /// The camera desired look at.
-    /// </summary>
-    private Transform mCameraDesiredLookAt;
-
-    #endregion
-
     /// <summary>
     /// Start this instance.
     /// </summary>
     private void Start()
     {
-        PlayerPrefs.DeleteAll();
+        //########################################
+        //PlayerPrefs.DeleteAll();
+        //########################################
+
 
         //Set the first skin for player
         ChangePlayerSkin(GameManager.Instance.CurrentSkinIndex);
@@ -76,8 +107,17 @@ public class MainMenu : MonoBehaviour
             container.GetComponent<Image>().sprite = thumbnail;
             container.transform.SetParent(levelButtonContainer.transform, false);
 
-            string sceneName = thumbnail.name;
+            LevelData levelData = new LevelData(thumbnail.name);
+            container.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = (levelData.BestTime != 0.0f) ? levelData.BestTime.ToString("f") : "LOCKED";
+            container.transform.GetChild(1).GetComponent<Image>().enabled = mNextLevelLocked;
+            container.GetComponent<Button>().interactable = !mNextLevelLocked;
 
+            if(levelData.BestTime == 0.0f)
+            {
+                mNextLevelLocked = true;
+            }
+
+            string sceneName = thumbnail.name;
             //adds a listener so when the button is clicked the level is loaded
             container.GetComponent<Button>().onClick.AddListener(() => LoadLevel(sceneName));
         }
@@ -97,6 +137,7 @@ public class MainMenu : MonoBehaviour
             int index = textureIndex;
             //adds a listener so when the skin is clicked the player changes to this skin
             container.GetComponent<Button>().onClick.AddListener(() => ChangePlayerSkin(index));
+            container.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = costs[index].ToString();
 
             //true when the skin is unlocked
             if((GameManager.Instance.SkinAvailability & 1 << index) == 1 << index)
@@ -163,7 +204,7 @@ public class MainMenu : MonoBehaviour
         else
         {
             //You do not have the skin, do you want to buy it --- cost
-            float cost = 500;
+            int cost = costs[index];
 
             if(GameManager.Instance.Currency >= cost)
             {
