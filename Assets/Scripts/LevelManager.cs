@@ -8,14 +8,19 @@ public class LevelManager : MonoBehaviour
     #region Private Properties
 
     private static LevelManager mInstance;
-
     private float mStartTime;
+    private GameObject mPlayer;
+
     #endregion
-    
+
     #region Public Proprties
 
     public static LevelManager Instance { get { return mInstance; } }
+
     public GameObject PauseMenu;
+    public Transform RespawnPoint;
+
+
     public float SilverTime;
     public float GoldTime;
     #endregion
@@ -28,6 +33,14 @@ public class LevelManager : MonoBehaviour
         mInstance = this;
         PauseMenu.SetActive(false);
         mStartTime = Time.time;
+        mPlayer = GameObject.FindGameObjectWithTag("Player");
+        mPlayer.transform.position = RespawnPoint.position;
+    }
+
+    private void Update()
+    {
+        if (mPlayer.transform.position.y < -25.0f)
+            Death();
     }
 
     /// <summary>
@@ -78,5 +91,14 @@ public class LevelManager : MonoBehaviour
         PlayerPrefs.SetString(SceneManager.GetActiveScene().name, saveString);
 
         SceneManager.LoadScene("MainMenu");
+    }
+
+    public void Death()
+    {
+        mPlayer.transform.position = RespawnPoint.position;
+        Rigidbody rigid = mPlayer.GetComponent<Rigidbody>();
+
+        rigid.velocity = Vector3.zero;
+        rigid.angularVelocity = Vector3.zero;
     }
 }
